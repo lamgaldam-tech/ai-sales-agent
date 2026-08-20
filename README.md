@@ -115,7 +115,46 @@ interface Response {
 }
 ```
 
-- **GET /integrations/:type/:identifier** <!-- shop name or spreadsheet id -->
+- **GET /integrations/:type/:identifier/redirect**
+  <!-- identifier represents shop domain or spreadsheet id -->
+  <!-- Responds with postMessage + script to close popup and notify parent window -->
+
+```html
+<!-- on success -->
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      if (window.opener) {
+        window.opener.postMessage(
+          { type: "OAUTH_COMPLETE", status: "success" },
+          "*",
+        );
+      }
+      window.close();
+    </script>
+  </body>
+</html>
+<!-- on error -->
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      if (window.opener) {
+        window.opener.postMessage(
+          {
+            type: "OAUTH_COMPLETE",
+            status: "error",
+            error: "OAuth authentication failed",
+          },
+          "*",
+        );
+      }
+      window.close();
+    </script>
+  </body>
+</html>
+```
 
 - **GET /products**
 

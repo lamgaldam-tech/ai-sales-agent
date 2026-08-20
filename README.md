@@ -1,4 +1,5 @@
 # AI Sales Agent
+
 AI-powered sales automation platform for businesses that communicate with customers through WhatsApp. The application connects business data sources and messaging channels to provide automated, context-aware customer interactions and sales assistance.
 
 ## Database
@@ -110,16 +111,10 @@ interface Response {
     type: "shopify" | "youcan" | "google_sheets";
     connected: boolean;
   }[];
-};
+}
 ```
 
-- **GET /integrations/:type**
-```ts
-interface Payload {
-    // shop name for shopfiy and youcan, spreadsheet id for google sheets
-    identifier: string;
-};
-```
+- **GET /integrations/:type/:identifier** <!-- shop name or spreadsheet id -->
 
 - **GET /products**
 
@@ -131,7 +126,7 @@ interface Response {
     price: number;
     quantity: number;
   };
-};
+}
 ```
 
 - **POST /broadcast**
@@ -139,5 +134,5 @@ interface Response {
 ```ts
 interface Payload {
   messages: { phone: string; message: string }[];
-};
+}
 ```

@@ -1,4 +1,4 @@
 .env
-auth
-node_modules
-supabase/.temp
+/auth
+/node_modules
+/supabase

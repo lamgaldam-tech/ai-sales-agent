@@ -109,6 +109,7 @@ interface Response {
     id: string;
     name: string;
     type: "shopify" | "youcan" | "google_sheets";
+    identifier: string;
     connected: boolean;
   }[];
 }

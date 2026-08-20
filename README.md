@@ -125,7 +125,7 @@ interface Response {
     description: string;
     price: number;
     quantity: number;
-  };
+  }[];
 }
 ```
 

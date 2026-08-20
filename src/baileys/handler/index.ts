@@ -1,5 +1,5 @@
 import { askAssistant } from "@/baileys/handler/assistant.js";
-import { fetchBusinessProducts } from "@/integrations/products.js";
+import { fetchBusinessProducts } from "@/integrations/index.js";
 import {
   createOrder,
   getBusinessById,

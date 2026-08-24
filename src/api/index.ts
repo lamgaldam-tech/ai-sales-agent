@@ -74,9 +74,7 @@ app.get("/integrations/:type/:identifier/redirect", async (req, res) => {
     return res.status(400).json({ error: `Unsupported integration type` });
   }
 
-  return res.redirect(
-    redirectHandler(identifier, req.query as Record<string, string>),
-  );
+  return res.redirect(redirectHandler(identifier));
 });
 
 app.get("/integrations/:type/:identifier/callback", async (req, res) => {

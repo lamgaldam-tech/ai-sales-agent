@@ -73,7 +73,7 @@ async function youcanProducts(
   const tokens = await refreshAccessToken(integration.refresh_token);
 
   if (!tokens?.accessToken) {
-    await upsertIntegration(integration.businesses_id, {
+    await upsertIntegration({
       ...integration,
       access_token: "",
       refresh_token: "",
@@ -81,7 +81,7 @@ async function youcanProducts(
     return [];
   }
 
-  await upsertIntegration(integration.businesses_id, {
+  await upsertIntegration({
     ...integration,
     access_token: tokens.accessToken,
     ...(tokens.refreshToken ? { refresh_token: tokens.refreshToken } : {}),
@@ -94,7 +94,7 @@ async function youcanProducts(
   }
 
   if (response.status === 401 || response.status === 403) {
-    await upsertIntegration(integration.businesses_id, {
+    await upsertIntegration({
       ...integration,
       access_token: "",
       refresh_token: "",

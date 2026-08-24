@@ -68,14 +68,14 @@ async function sheetsProducts(integration: Integrations["Row"]) {
 
   const accessToken = await refreshAccessToken(integration.refresh_token);
   if (!accessToken) {
-    await upsertIntegration(integration.businesses_id, {
+    await upsertIntegration({
       ...integration,
       access_token: "",
       refresh_token: "",
     });
     return [];
   }
-  await upsertIntegration(integration.businesses_id, {
+  await upsertIntegration({
     ...integration,
     access_token: accessToken,
   });
@@ -83,7 +83,7 @@ async function sheetsProducts(integration: Integrations["Row"]) {
   response = await fetchSheet(integration.identifier, accessToken);
   if (response.ok) return parseProducts((await response.json()) as any);
   if (response.status === 401 || response.status === 403) {
-    await upsertIntegration(integration.businesses_id, {
+    await upsertIntegration({
       ...integration,
       access_token: "",
       refresh_token: "",

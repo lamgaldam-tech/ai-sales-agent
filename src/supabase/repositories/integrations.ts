@@ -12,21 +12,12 @@ async function getBusinessIntegrations(businessId: string) {
   return data;
 }
 
-async function upsertIntegration(
-  businessId: string,
-  integration: Integrations["Insert"],
-) {
+async function upsertIntegration(integration: Integrations["Insert"]) {
   const { error } = await supabase
     .from("integrations")
-    .upsert(
-      {
-        ...integration,
-        businesses_id: businessId,
-      },
-      {
-        onConflict: "businesses_id,identifier,type",
-      },
-    )
+    .upsert(integration, {
+      onConflict: "businesses_id,identifier,type",
+    })
     .select()
     .single();
   if (error) throw error;

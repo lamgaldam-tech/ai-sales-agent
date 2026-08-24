@@ -35,7 +35,7 @@ async function shopifyProducts(
   );
 
   if (response.status === 401 || response.status === 403) {
-    await upsertIntegration(integration.businesses_id, {
+    await upsertIntegration({
       ...integration,
       access_token: "",
     });

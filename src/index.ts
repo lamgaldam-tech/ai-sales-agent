@@ -11,12 +11,10 @@ import {
 
 async function initializeConnections() {
   const businessIds = await getBusinessesIds();
-  Promise.all(
-    businessIds.map(({ businesses_id }) => createBaileysConnection(businesses_id)),
-  );
+  Promise.all(businessIds.map(({ id }) => createBaileysConnection(id)));
   subscribeToBusinessesChanges(
-    (businessesId) => createBaileysConnection(businessesId),
-    (businessesId) => removeBaileysConnection(businessesId),
+    (businessId) => createBaileysConnection(businessId),
+    (businessId) => removeBaileysConnection(businessId),
   );
 }
 

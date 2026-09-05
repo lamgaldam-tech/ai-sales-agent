@@ -8,7 +8,7 @@ AI-powered sales automation platform for businesses that communicate with custom
 
 **businesses** :
 
-- businesses_id uuid NON_NULL (refereence auth.users.id)
+- id uuid NON_NULL (refereence auth.users.id)
 - name text NON_NULL
 - phone text NON_NULL
 - type text NON_NULL
@@ -24,7 +24,7 @@ AI-powered sales automation platform for businesses that communicate with custom
 **prompts** :
 
 - id uuid auto_generated
-- businesses_id uuid NON_NULL (refereence businesses.id)
+- business_id uuid NON_NULL (refereence businesses.id)
 - content text NON_NULL
 - created_at timestamptz NON_NULL default now()
 - updated_at timestamptz NON_NULL default now()
@@ -34,7 +34,7 @@ AI-powered sales automation platform for businesses that communicate with custom
 **integrations** :
 
 - id uuid auto_generated
-- businesses_id uuid NON_NULL (refereence businesses.id)
+- business_id uuid NON_NULL (refereence businesses.id)
 - type enum("shopify", "youcan", "google_sheets") NON_NULL
 - name text NON_NULL
 - identifier text NON_NULL
@@ -48,7 +48,7 @@ AI-powered sales automation platform for businesses that communicate with custom
 **customers** :
 
 - id uuid auto_generated
-- businesses_id uuid NON_NULL (refereence businesses.id)
+- business_id uuid NON_NULL (refereence businesses.id)
 - phone text NON_NULL
 - name text
 - country text

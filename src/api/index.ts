@@ -1,12 +1,13 @@
 import cors from "cors";
 import express from "express";
 import { getUser } from "@/api/middleware.js";
+import { ApiError, sendError, sendResponse } from "@/api/response.js";
 import { getConnection } from "@/baileys/index.js";
 import {
   fetchBusinessProducts,
   integrationsAuth,
 } from "@/integrations/index.js";
-import { getBusinessIntegrations } from "@/supabase/index.js";
+import { getBusinessById, getBusinessIntegrations } from "@/supabase/index.js";
 import type { Integrations } from "@/supabase/index.js";
 
 export const app = express();
@@ -15,41 +16,26 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/connection", async (req, res) => {
-  let user;
   try {
-    user = await getUser(req);
-  } catch (error) {
-    return res.status(401).json({ error });
-  }
-
-  const connection = getConnection(user.id);
-  if (!connection) {
-    return res.status(404).json({
-      error: "No WhatsApp connection found",
+    const user = await getUser(req);
+    const connection = getConnection(user.id);
+    if (!connection) {
+      throw new ApiError(404, "No WhatsApp connection found");
+    }
+    return sendResponse(res, 200, {
+      connected: connection.connected,
+      qr: connection.qr,
     });
+  } catch (error) {
+    return sendError(res, error);
   }
-
-  return res.status(200).json({
-    connected: connection.connected,
-    qr: connection.qr,
-  });
 });
 
 app.get("/integrations", async (req, res) => {
-  let user;
-
   try {
-    user = await getUser(req);
-  } catch {
-    return res.status(401).json({
-      error: "Unauthorized",
-    });
-  }
-
-  try {
+    const user = await getUser(req);
     const integrations = await getBusinessIntegrations(user.id);
-
-    return res.status(200).json({
+    return sendResponse(res, 200, {
       integrations: integrations.map((integration) => ({
         id: integration.id,
         name: integration.name,
@@ -59,124 +45,93 @@ app.get("/integrations", async (req, res) => {
       })),
     });
   } catch (error) {
-    return res.status(500).json({
-      error: "Failed to fetch integrations",
-    });
+    return sendError(res, error);
   }
 });
 
-app.get("/integrations/:type/:identifier/redirect", async (req, res) => {
-  const { type, identifier } = req.params;
-
-  const redirectHandler =
-    integrationsAuth.redirect[type as Integrations["Row"]["type"]];
-  if (!redirectHandler) {
-    return res.status(400).json({ error: `Unsupported integration type` });
-  }
-
-  return res.redirect(redirectHandler(identifier));
-});
-
-app.get("/integrations/:type/:identifier/callback", async (req, res) => {
-  const { type, identifier } = req.params;
-
-  const callbackHandler =
-    integrationsAuth.callback[type as Integrations["Row"]["type"]];
-  if (!callbackHandler) {
-    return res.status(400).json({ error: `Unsupported integration type` });
-  }
+app.get("/integrations/:businessId/:name/:type/redirect", async (req, res) => {
+  const { businessId, name, type } = req.params;
 
   try {
-    await callbackHandler(identifier, req.query as Record<string, string>);
+    const redirectHandler =
+      integrationsAuth.redirect[type as Integrations["Row"]["type"]];
+    if (!redirectHandler) {
+      throw new ApiError(401, "Unsupported integration type");
+    }
 
-    return res.send(`
-      <!DOCTYPE html>
-      <html>
-        <body>
-          <script>
-            if (window.opener) {
-              window.opener.postMessage({ type: "OAUTH_COMPLETE", status: "success" }, "*");
-            }
-            window.close();
-          </script>
-        </body>
-      </html>
+    return res.redirect(redirectHandler(businessId, name));
+  } catch (error) {
+    return sendError(res, error);
+  }
+});
+
+app.get("/integrations/:type/callback", async (req, res) => {
+  const { type } = req.params;
+  const { code, shop, state } = req.query;
+
+  try {
+    if (!state || typeof state !== "string") {
+      throw new ApiError(400, "state not provided or invalid");
+    }
+    const [businessId, name] = state.split("|");
+    if (!businessId || typeof businessId !== "string") {
+      throw new ApiError(400, "id not provided or invalid");
+    }
+    if (!name || typeof name !== "string") {
+      throw new ApiError(400, "name not provided or invalid");
+    }
+
+    await getBusinessById(businessId);
+
+    const callbackHandler =
+      integrationsAuth.callback[type as Integrations["Row"]["type"]];
+    if (!callbackHandler) {
+      throw new ApiError(401, "Unsupported integration type");
+    }
+
+    await callbackHandler(businessId, name, code as string, shop as string);
+    return res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <script>
+        window.close();
+      </script>
+    </html>
     `);
   } catch (error) {
-    return res.status(500).send(`
-      <!DOCTYPE html>
-      <html>
-        <body>
-          <script>
-            if (window.opener) {
-              window.opener.postMessage({ 
-                type: "OAUTH_COMPLETE", 
-                status: "error", 
-                error: "OAuth authentication failed" 
-              }, "*");
-            }
-            window.close();
-          </script>
-        </body>
-      </html>
-    `);
+    return sendError(res, error);
   }
 });
 
 app.get("/products", async (req, res) => {
-  let user;
-
   try {
-    user = await getUser(req);
-  } catch {
-    return res.status(401).json({
-      error: "Unauthorized",
-    });
-  }
-
-  try {
+    const user = await getUser(req);
     const products = await fetchBusinessProducts(user.id);
-
-    return res.status(200).json({
-      products,
-    });
+    return sendResponse(res, 200, { products });
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      error: "Failed to fetch products",
-    });
+    return sendError(res, error);
   }
 });
 
 app.post("/broadcast", async (req, res) => {
-  let user;
   try {
-    user = await getUser(req);
-  } catch (error) {
-    return res.status(401).json({ error });
-  }
+    const user = await getUser(req);
+    const connection = getConnection(user.id);
+    if (!connection) {
+      throw new ApiError(404, "No WhatsApp connection found");
+    }
+    const messages =
+      (req.body.messages as { phone: string; message: string }[]) || [];
 
-  const connection = getConnection(user.id);
-  if (!connection) {
-    return res.status(404).json({
-      error: "No WhatsApp connection found",
-    });
-  }
-
-  const messages = req.body.messages as { phone: string; message: string }[];
-  if (!messages) {
-    return res.status(400).json({ error: "" });
-  }
-
-  try {
     await Promise.all(
       messages.map((message) =>
-        connection.socket.sendMessage(message.phone, { text: message.message }),
+        connection.socket.sendMessage(message.phone, {
+          text: message.message,
+        }),
       ),
     );
-    return res.status(200).json({ success: true });
+    return sendResponse(res, 200, { success: true });
   } catch (error) {
-    return res.status(503).json({ error });
+    return sendError(res, error);
   }
 });

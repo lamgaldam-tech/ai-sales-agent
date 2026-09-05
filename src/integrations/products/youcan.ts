@@ -15,7 +15,10 @@ function parseYouCanProducts(data: { data?: YouCanProduct[] }): Product[] {
 
   return products.map((product) => ({
     name: product.name ?? "",
-    description: product.description ?? "",
+    description: (product.description ?? "")
+      .replace(/<\/p>|<br\s*\/?>/gi, "\n")
+      .replace(/<\/?[^>]+(>|$)/g, "")
+      .trim(),
     price: Number(product.price ?? 0),
     quantity: Number(product.quantity ?? product.inventory ?? 0),
   }));

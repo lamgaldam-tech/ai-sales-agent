@@ -1,62 +1,51 @@
 import { upsertIntegration } from "@/supabase/index.js";
+import type {
+  IntegrationRedirect,
+  IntegrationCallback,
+} from "@/integrations/types.js";
 
-const APP_URL = process.env.APP_URL!;
+const API_HOST = process.env.API_HOST!;
 const YOUCAN_CLIENT_ID = process.env.YOUCAN_CLIENT_ID!;
-const YOUCAN_CLIENT_SECRET = process.env.YOUCAN_CLIENT_SECRET!;
+const YOUCAN_SECRET_ID = process.env.YOUCAN_SECRET_ID!;
 
-const youcanRedirect = (identifier: string) => {
-  const params = new URLSearchParams();
+const youcanRedirect: IntegrationRedirect = (businessId, name) => {
+  const params = new URLSearchParams({
+    client_id: YOUCAN_CLIENT_ID,
+    scope: "read-products",
+    redirect_uri: `${API_HOST}/integrations/youcan/callback`,
+    response_type: "code",
+    state: `${businessId}|${name}`,
+  });
 
-  params.set("client_id", YOUCAN_CLIENT_ID);
-  params.set(
-    "redirect_uri",
-    `${APP_URL}/integrations/youcan/${identifier}/callback`,
-  );
-  params.set("response_type", "code");
-  params.append("scope[]", "read-products");
-  params.set("state", identifier);
-
+  upsertIntegration({
+    business_id: businessId,
+    identifier: name,
+    name,
+    type: "youcan",
+    access_token: "",
+    refresh_token: "",
+  });
   return `https://seller-area.youcan.shop/admin/oauth/authorize?${params.toString()}`;
 };
 
-const youcanCallBack = async (
-  identifier: string,
-  query: Record<string, string>,
-) => {
-  const { code, state, error } = query;
-
-  if (error) {
-    throw new Error(`YouCan OAuth error: ${error}`);
-  }
-
+const youcanCallBack: IntegrationCallback = async (businessId, name, code) => {
   if (!code) {
     throw new Error("Missing YouCan authorization code");
   }
 
-  if (state !== identifier) {
-    throw new Error("Invalid OAuth state");
-  }
-
-  const redirectUri =
-    `${APP_URL}/integrations/youcan/${identifier}/callback`;
-
-  const response = await fetch(
-    "https://api.youcan.shop/oauth/token",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "application/json",
-      },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        client_id: YOUCAN_CLIENT_ID,
-        client_secret: YOUCAN_CLIENT_SECRET,
-        redirect_uri: redirectUri,
-        code,
-      }),
+  const response = await fetch("https://api.youcan.shop/oauth/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-  );
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: YOUCAN_CLIENT_ID,
+      client_secret: YOUCAN_SECRET_ID,
+      redirect_uri: `${API_HOST}/integrations/callback`,
+      code,
+    }),
+  });
 
   if (!response.ok) {
     const error = await response.text();
@@ -71,12 +60,12 @@ const youcanCallBack = async (
   };
 
   await upsertIntegration({
-    identifier,
-    name: identifier,
+    business_id: businessId,
+    identifier: name,
+    name,
     type: "youcan",
     access_token: data.access_token,
     refresh_token: data.refresh_token,
-    businesses_id: identifier,
   });
 };
 

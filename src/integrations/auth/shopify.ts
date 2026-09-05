@@ -1,25 +1,37 @@
 import { upsertIntegration } from "@/supabase/index.js";
+import type {
+  IntegrationRedirect,
+  IntegrationCallback,
+} from "@/integrations/types.js";
 
-const APP_URL = process.env.APP_URL!;
+const API_HOST = process.env.API_HOST!;
 const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CLIENT_ID!;
-const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CLIENT_SECRET!;
+const SHOPIFY_SECRET_ID = process.env.SHOPIFY_SECRET_ID!;
 
-const shopifyRedirect = (identifier: string) => {
+const shopifyRedirect: IntegrationRedirect = (businessId, name) => {
   const params = new URLSearchParams({
     client_id: SHOPIFY_CLIENT_ID,
     scope: "read_products",
-    redirect_uri: `${APP_URL}/integrations/shopify/${identifier}/callback`,
-    state: identifier,
+    redirect_uri: `${API_HOST}/integrations/shopify/callback`,
+    state: `${businessId}|${name}`,
   });
-  return `https://${identifier}/admin/oauth/authorize?${params.toString()}`;
+  upsertIntegration({
+    business_id: businessId,
+    identifier: name,
+    name,
+    type: "shopify",
+    access_token: "",
+    refresh_token: "",
+  });
+  return `https://${name}/admin/oauth/authorize?${params.toString()}`;
 };
 
-const shopifyCallBack = async (
-  identifier: string,
-  query: Record<string, string>,
+const shopifyCallBack: IntegrationCallback = async (
+  businessId,
+  name,
+  code,
+  shop,
 ) => {
-  const { code, shop, state } = query;
-
   if (!code) {
     throw new Error("Missing Shopify authorization code");
   }
@@ -28,18 +40,14 @@ const shopifyCallBack = async (
     throw new Error("Missing Shopify shop");
   }
 
-  if (state !== identifier) {
-    throw new Error("Invalid OAuth state");
-  }
-
   const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: JSON.stringify({
+    body: new URLSearchParams({
       client_id: SHOPIFY_CLIENT_ID,
-      client_secret: SHOPIFY_CLIENT_SECRET,
+      client_secret: SHOPIFY_SECRET_ID,
       code,
     }),
   });
@@ -55,12 +63,12 @@ const shopifyCallBack = async (
   };
 
   await upsertIntegration({
+    business_id: businessId,
     identifier: shop,
-    name: shop,
+    name,
     type: "shopify",
     access_token: data.access_token,
     refresh_token: "",
-    businesses_id: identifier,
   });
 };
 

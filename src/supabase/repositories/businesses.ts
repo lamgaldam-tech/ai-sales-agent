@@ -6,24 +6,24 @@ export type Businesses = Database["public"]["Tables"]["businesses"];
 async function getBusinessesIds() {
   const { data, error } = await supabase
     .from("businesses")
-    .select("businesses_id");
+    .select("id");
   if (error) throw error;
   return data;
 }
 
-async function getBusinessById(businessesId: string) {
+async function getBusinessById(businessId: string) {
   const { data, error } = await supabase
     .from("businesses")
     .select("*")
-    .eq("businesses_id", businessesId)
+    .eq("id", businessId)
     .single();
   if (error) throw error;
   return data;
 }
 
 async function subscribeToBusinessesChanges(
-  onInsert: (businessesId: string) => void,
-  onDelete: (businessesId: string) => void,
+  onInsert: (businessId: string) => void,
+  onDelete: (businessId: string) => void,
 ) {
   supabase
     .channel("businesses")
@@ -34,7 +34,7 @@ async function subscribeToBusinessesChanges(
         schema: "public",
         table: "businesses",
       },
-      (payload) => onInsert(payload.new.businesses_id),
+      (payload) => onInsert(payload.new.id),
     )
     .on(
       "postgres_changes",
@@ -43,7 +43,7 @@ async function subscribeToBusinessesChanges(
         schema: "public",
         table: "businesses",
       },
-      (payload) => onDelete(payload.old.businesses_id),
+      (payload) => onDelete(payload.old.id),
     )
     .subscribe();
 }

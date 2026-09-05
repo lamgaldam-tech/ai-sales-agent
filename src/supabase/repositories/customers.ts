@@ -3,12 +3,12 @@ import type { Database } from "@/supabase/types.js";
 
 export type Customers = Database["public"]["Tables"]["customers"];
 
-async function upsertCustomer(businessesId: string, phone: string) {
+async function upsertCustomer(businessId: string, phone: string) {
   const { data, error } = await supabase
     .from("customers")
     .upsert(
-      { businesses_id: businessesId, phone },
-      { onConflict: "businesses_id,phone" },
+      { business_id: businessId, phone },
+      { onConflict: "business_id,phone" },
     )
     .select()
     .single();

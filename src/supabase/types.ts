@@ -16,38 +16,38 @@ export type Database = {
     Tables: {
       businesses: {
         Row: {
-          businesses_id: string
           country: string
           created_at: string
           currency: string
+          id: string
           language: string
           name: string
           phone: string
-          plan: Database["public"]["Enums"]["plan_enum"]
+          plan: Database["public"]["Enums"]["business_plan"]
           type: string
           updated_at: string
         }
         Insert: {
-          businesses_id: string
           country: string
           created_at?: string
           currency: string
+          id: string
           language: string
           name: string
           phone: string
-          plan: Database["public"]["Enums"]["plan_enum"]
+          plan?: Database["public"]["Enums"]["business_plan"]
           type: string
           updated_at?: string
         }
         Update: {
-          businesses_id?: string
           country?: string
           created_at?: string
           currency?: string
+          id?: string
           language?: string
           name?: string
           phone?: string
-          plan?: Database["public"]["Enums"]["plan_enum"]
+          plan?: Database["public"]["Enums"]["business_plan"]
           type?: string
           updated_at?: string
         }
@@ -55,7 +55,7 @@ export type Database = {
       }
       customers: {
         Row: {
-          businesses_id: string
+          business_id: string
           city: string | null
           country: string | null
           created_at: string
@@ -65,7 +65,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          businesses_id: string
+          business_id: string
           city?: string | null
           country?: string | null
           created_at?: string
@@ -75,7 +75,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          businesses_id?: string
+          business_id?: string
           city?: string | null
           country?: string | null
           created_at?: string
@@ -86,55 +86,55 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "customers_businesses_id_fkey"
-            columns: ["businesses_id"]
+            foreignKeyName: "customers_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
-            referencedColumns: ["businesses_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
       integrations: {
         Row: {
           access_token: string
-          businesses_id: string
+          business_id: string
           created_at: string
           id: string
           identifier: string
           name: string
           refresh_token: string
-          type: Database["public"]["Enums"]["integration_type_enum"]
+          type: Database["public"]["Enums"]["integration_type"]
           updated_at: string
         }
         Insert: {
           access_token: string
-          businesses_id: string
+          business_id: string
           created_at?: string
           id?: string
           identifier: string
           name: string
           refresh_token: string
-          type: Database["public"]["Enums"]["integration_type_enum"]
+          type: Database["public"]["Enums"]["integration_type"]
           updated_at?: string
         }
         Update: {
           access_token?: string
-          businesses_id?: string
+          business_id?: string
           created_at?: string
           id?: string
           identifier?: string
           name?: string
           refresh_token?: string
-          type?: Database["public"]["Enums"]["integration_type_enum"]
+          type?: Database["public"]["Enums"]["integration_type"]
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "connections_businesses_id_fkey"
-            columns: ["businesses_id"]
+            foreignKeyName: "integrations_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
-            referencedColumns: ["businesses_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -144,7 +144,7 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
-          role: Database["public"]["Enums"]["role_enum"]
+          role: Database["public"]["Enums"]["message_role"]
           updated_at: string
         }
         Insert: {
@@ -152,7 +152,7 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
-          role: Database["public"]["Enums"]["role_enum"]
+          role: Database["public"]["Enums"]["message_role"]
           updated_at?: string
         }
         Update: {
@@ -160,7 +160,7 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
-          role?: Database["public"]["Enums"]["role_enum"]
+          role?: Database["public"]["Enums"]["message_role"]
           updated_at?: string
         }
         Relationships: [
@@ -207,21 +207,21 @@ export type Database = {
       }
       prompts: {
         Row: {
-          businesses_id: string
+          business_id: string
           content: string
           created_at: string
           id: string
           updated_at: string
         }
         Insert: {
-          businesses_id: string
+          business_id: string
           content: string
           created_at?: string
           id?: string
           updated_at?: string
         }
         Update: {
-          businesses_id?: string
+          business_id?: string
           content?: string
           created_at?: string
           id?: string
@@ -229,11 +229,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "prompts_businesses_id_fkey"
-            columns: ["businesses_id"]
+            foreignKeyName: "prompts_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
-            referencedColumns: ["businesses_id"]
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -245,7 +245,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      business_plan: "free" | "basic" | "pro"
+      integration_type: "shopify" | "youcan" | "google_sheets"
       integration_type_enum: "shopify" | "youcan" | "google_sheets"
+      message_role: "system" | "assistant" | "user"
       plan_enum: "free" | "basic" | "pro"
       role_enum: "system" | "assistant" | "user"
     }
@@ -375,7 +378,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      business_plan: ["free", "basic", "pro"],
+      integration_type: ["shopify", "youcan", "google_sheets"],
       integration_type_enum: ["shopify", "youcan", "google_sheets"],
+      message_role: ["system", "assistant", "user"],
       plan_enum: ["free", "basic", "pro"],
       role_enum: ["system", "assistant", "user"],
     },

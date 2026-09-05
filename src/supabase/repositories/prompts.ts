@@ -3,11 +3,11 @@ import type { Database } from "@/supabase/types.js";
 
 export type Prompts = Database["public"]["Tables"]["prompts"];
 
-async function getBusinessPrompts(businessesId: string) {
+async function getBusinessPrompts(businessId: string) {
   const { data, error } = await supabase
     .from("prompts")
     .select("*")
-    .eq("businesses_id", businessesId);
+    .eq("business_id", businessId);
   if (error) throw error;
   return data;
 }

@@ -9,26 +9,26 @@ import type { Connection } from "@/baileys/types.js";
 
 const connections = new Map<string, Connection>();
 
-const getConnection = (businessesId: string) => connections.get(businessesId);
+const getConnection = (businessId: string) => connections.get(businessId);
 
-async function removeBaileysConnection(businessesId: string, isLoggedOut?: true) {
+async function removeBaileysConnection(businessId: string, isLoggedOut?: true) {
   if (!isLoggedOut) {
-    const connection = connections.get(businessesId);
+    const connection = connections.get(businessId);
     if (connection) {
       connection.deleting = true;
       await connection.socket.logout();
       connection.socket.end(undefined);
     }
   }
-  connections.delete(businessesId);
-  await rm(`./auth/${businessesId}`, {
+  connections.delete(businessId);
+  await rm(`./auth/${businessId}`, {
     recursive: true,
     force: true,
   });
 }
 
-async function createBaileysConnection(businessesId: string) {
-  const { state, saveCreds } = await useMultiFileAuthState(`./auth/${businessesId}`);
+async function createBaileysConnection(businessId: string) {
+  const { state, saveCreds } = await useMultiFileAuthState(`./auth/${businessId}`);
   const sock = makeWASocket({
     auth: state,
   });
@@ -41,7 +41,7 @@ async function createBaileysConnection(businessesId: string) {
     socket: sock,
     deleting: false,
   };
-  connections.set(businessesId, connection);
+  connections.set(businessId, connection);
 
   sock.ev.on("connection.update", (update) => {
     const { connection: conn, qr, lastDisconnect } = update;
@@ -51,8 +51,8 @@ async function createBaileysConnection(businessesId: string) {
       const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
       const isLoggedOut = statusCode === DisconnectReason.loggedOut;
       if (isLoggedOut)
-        removeBaileysConnection(businessesId, true).catch(console.error);
-      if (!connection.deleting) createBaileysConnection(businessesId);
+        removeBaileysConnection(businessId, true).catch(console.error);
+      if (!connection.deleting) createBaileysConnection(businessId);
     }
   });
 
@@ -66,7 +66,7 @@ async function createBaileysConnection(businessesId: string) {
       const text =
         msg.message?.conversation ?? msg.message?.extendedTextMessage?.text;
       if (!text) continue;
-      handleCustomerMessage(businessesId, connection, text, jid).catch(console.error);
+      handleCustomerMessage(businessId, connection, text, jid).catch(console.error);
     }
   });
 }

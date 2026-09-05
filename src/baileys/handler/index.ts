@@ -13,16 +13,16 @@ import {
 import type { Connection } from "@/baileys/types.js";
 
 async function handleCustomerMessage(
-  businessesId: string,
+  businessId: string,
   connection: Connection,
   message: string,
   phone: string,
 ) {
-  const business = await getBusinessById(businessesId);
-  const prompts = await getBusinessPrompts(businessesId);
-  const customer = await upsertCustomer(businessesId, phone);
+  const business = await getBusinessById(businessId);
+  const prompts = await getBusinessPrompts(businessId);
+  const customer = await upsertCustomer(businessId, phone);
   const messages = await getCustomerMessages(customer.id);
-  const products = await fetchBusinessProducts(businessesId);
+  const products = await fetchBusinessProducts(businessId);
 
   const response = await askAssistant({
     business,
